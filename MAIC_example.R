@@ -11,7 +11,7 @@
 
 # Load the relevant libraries
 library("tidyverse"); library("maic"); library("sandwich")
-
+# The sandwich package is used to easily obtain standard errors using a sandwich estimator
 
 #==============================================================================#
 #### IPD ####
@@ -49,7 +49,7 @@ t2_outcomes <- t2_agg_data %>%
          lci = hba1c_change_lci,
          uci = hba1c_change_uci
          ) %>% 
-  select(treatment, md, lci, uci, se)
+  select(treatment, md, se, lci, uci)
 
 
 #==============================================================================#
@@ -130,16 +130,17 @@ baseline_summary <- reportCovariates(
 
 # Rescale the weights
 MAIC_weights_RS <- (MAIC_weights / sum(MAIC_weights)) * 300
+# The rescaled weights are relative to the original unit weights of each individual
 
 # Summary of weights
 summary(MAIC_weights_RS)
 
 # Plot the distribution of the weights
-plot(MAIC_weights_RS, main = "Hisotgram of rescaled weights")
+plot(MAIC_weights_RS, main = "Histogram of rescaled weights")
 
 # Calculate the effective sample size (ESS)
 sum(MAIC_weights)^2/sum(MAIC_weights^2)
-# ESS is 239.9466
+# ESS is 232 (~ 77% of the original sample size)
 
 
 #==============================================================================#
@@ -158,7 +159,7 @@ t1_outcomes <- t1_outcomes %>%
   add_row(
     treatment = "Treatment A vs. Placebo (adjusted)",
     md = coef(model_1)["trtTreatment A"],
-    se = sqrt(vcovHC(model_1)["trtTreatment A", "trtTreatment A"]),
+    se = sqrt(vcovHC(model_1)["trtTreatment A", "trtTreatment A"]), # Uses the sandwich estimator of variance matrix
     lci = md - 1.96*se,
     uci = md + 1.96*se
   )
